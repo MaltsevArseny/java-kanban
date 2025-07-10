@@ -1,49 +1,77 @@
+import managers.FileBackedTaskManager;
+import managers.Managers;
+import tasks.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class Main {
-    private static String[] args;
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        Main.args = args;
-        // args не используется, поэтому игнорируем
-        HistoryManager historyManager = getHistoryManager();
+        File file = null;
+        try {
+            // 1. Создаем временный файл для хранения данных
+            file = File.createTempFile("tasks", ".csv");
 
-        // Выводим историю
-        System.out.println("History after adding tasks:");
-        historyManager.getHistory().forEach(task -> System.out.println(task.getName()));
+            // 2. Создаем менеджер с файловым хранилищем
+            FileBackedTaskManager manager = Managers.getFileBackedManager(file);
 
-        // Удаляем задачу из истории
-        historyManager.remove(1);
-        System.out.println("History after removing task1:");
-        historyManager.getHistory().forEach(task -> System.out.println(task.getName()));
+            // 3. Создаем задачи разных типов
+            Task task1 = new Task(1, "Помыть посуду", "Помыть всю посуду вечером", TaskStatus.NEW);
+            Epic epic1 = new Epic(2, "Переезд", "Организация переезда в новый офис");
+            Subtask subtask1 = new Subtask(3, "Упаковать вещи", "Упаковать офисные принадлежности",
+                    TaskStatus.NEW, epic1.getId());
 
-        // Удаляем эпик с подзадачами
-        historyManager.remove(3);
-        System.out.println("History after removing epic1:");
-        historyManager.getHistory().forEach(task -> System.out.println(task.getName()));
-    }
+            // 4. Добавляем задачи в менеджер
+            manager.addNewTask(task1);
+            manager.addNewEpic(epic1);
+            manager.addNewSubtask(subtask1);
 
-    private static HistoryManager getHistoryManager() {
-        HistoryManager historyManager = new InMemoryHistoryManager();
+            // 5. Выводим созданные задачи
+            System.out.println("=== Все задачи ===");
+            System.out.println("Задачи:");
+            manager.getTasks().forEach(System.out::println);
+            System.out.println("\nЭпики:");
+            manager.getEpics().forEach(System.out::println);
+            System.out.println("\nПодзадачи:");
+            manager.getSubtasks().forEach(System.out::println);
 
-        Task task1 = new Task(1, "Task 1");
-        Task task2 = new Task(2, "Task 2");
-        Epic epic1 = new Epic(3, "Epic 1");
-        Subtask subtask1 = new Subtask(4, "Subtask 1", 3);
-        Subtask subtask2 = new Subtask(5, "Subtask 2", 3);
-        Subtask subtask3 = new Subtask(6, "Subtask 3", 3);
-        Epic epic2 = new Epic(7, "Epic 2");
+            // 6. Изменяем статусы некоторых задач
+            task1.setStatus(TaskStatus.IN_PROGRESS);
+            manager.updateTask(task1);
 
-        historyManager.add(task1);
-        historyManager.add(task2);
-        historyManager.add(epic1);
-        historyManager.add(subtask1);
-        historyManager.add(subtask2);
-        historyManager.add(subtask3);
-        historyManager.add(epic2);
+            subtask1.setStatus(TaskStatus.DONE);
+            manager.updateSubtask(subtask1);
 
-        // Запрашиваем задачи несколько раз в разном порядке
-        historyManager.add(task1);
-        historyManager.add(epic1);
-        historyManager.add(task2);
-        return historyManager;
+            // 7. Проверяем обновление статуса эпика
+            System.out.println("\n=== После обновления статусов ===");
+            System.out.println("Статус эпика: " + manager.getEpic(epic1.getId()).getStatus());
+
+            // 8. Создаем новый менеджер из файла
+            FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+
+            // 9. Проверяем загруженные данные
+            System.out.println("\n=== Данные после загрузки из файла ===");
+            System.out.println("Задачи:");
+            loadedManager.getTasks().forEach(System.out::println);
+            System.out.println("\nЭпики:");
+            loadedManager.getEpics().forEach(System.out::println);
+            System.out.println("\nПодзадачи:");
+            loadedManager.getSubtasks().forEach(System.out::println);
+
+            // 10. Проверяем историю просмотров
+            System.out.println("\n=== История просмотров ===");
+            loadedManager.getHistory().forEach(System.out::println);
+
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Произошла ошибка при работе с файлом", e);
+            System.err.println("Произошла критическая ошибка. Подробности в логах.");
+        } finally {
+            if (file != null) {
+                file.deleteOnExit();
+            }
+        }
     }
 }
