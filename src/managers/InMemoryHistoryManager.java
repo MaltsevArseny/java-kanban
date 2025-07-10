@@ -19,8 +19,10 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-    public void add(Task task) {
-
+    public void add(Task task) {  // Реализуем метод add
+        if (task == null) return;
+        remove(task.getId());
+        linkLast(task);
     }
 
     @Override
@@ -32,7 +34,13 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public List<Task> getHistory() {
-        return List.of();
+        List<Task> result = new ArrayList<>();
+        Node current = head;
+        while (current != null) {
+            result.add(current.task);
+            current = current.next;
+        }
+        return result;
     }
 
     private void linkLast(Task task) {

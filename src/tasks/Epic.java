@@ -15,7 +15,7 @@ public class Epic extends Task {
     }
 
     public List<Integer> getSubtaskIds() {
-        return new ArrayList<>(subtaskIds); // Возвращаем копию для безопасности
+        return new ArrayList<>(subtaskIds);
     }
 
     public void addSubtask(int subtaskId) {

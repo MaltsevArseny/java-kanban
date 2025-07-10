@@ -17,7 +17,7 @@ public interface TaskManager {
     void removeAllTasks();
 
     // Методы для Subtask
-    int addNewSubtask(Subtask subtask);
+    void addNewSubtask(Subtask subtask);
     Subtask getSubtask(int id);
     List<Subtask> getSubtasks();
     void updateSubtask(Subtask subtask);

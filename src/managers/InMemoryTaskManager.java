@@ -78,7 +78,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Методы для Subtask
     @Override
-    public int addNewSubtask(Subtask subtask) {
+    public void addNewSubtask(Subtask subtask) {
         if (!epics.containsKey(subtask.getEpicId())) {
             throw new IllegalArgumentException("Эпик для подзадачи не найден");
         }
@@ -94,7 +94,6 @@ public class InMemoryTaskManager implements TaskManager {
             prioritizedTasks.add(newSubtask);
         }
         updateEpicStatus(newSubtask.getEpicId());
-        return newSubtask.getId();
     }
 
     @Override
