@@ -6,7 +6,7 @@ import java.util.List;
 public interface TaskManager {
     // Методы для Task
     int addNewTask(Task task);
-    Task getTask(int id);
+    void getTask(int id);
     List<Task> getTasks();
     void updateTask(Task task);
     void removeTask(int id);
