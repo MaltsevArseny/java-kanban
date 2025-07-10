@@ -1,18 +1,21 @@
 package tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Epic extends Task {
     private final List<Integer> subtaskIds = new ArrayList<>();
+    private LocalDateTime endTime;
 
     public Epic(int id, String name, String description) {
-        super(id, name, description, TaskStatus.NEW);
+        super(id, name, description, TaskStatus.NEW, Duration.ZERO, null);
         this.type = TaskType.EPIC;
     }
 
     public List<Integer> getSubtaskIds() {
-        return new ArrayList<>(subtaskIds);
+        return new ArrayList<>(subtaskIds); // Возвращаем копию для безопасности
     }
 
     public void addSubtask(int subtaskId) {
@@ -21,13 +24,15 @@ public class Epic extends Task {
         }
     }
 
-    // Удален неиспользуемый метод removeSubtask()
-
-    @Override
-    public String toString() {
-        return String.format("Epic{id=%d, name='%s', description='%s', status=%s, subtaskIds=%s}",
-                id, name, description, status, subtaskIds);
+    public void removeSubtask(int subtaskId) {
+        subtaskIds.remove(Integer.valueOf(subtaskId));
     }
 
-    // Удален переопределенный метод toCSV(), так как он идентичен родительскому
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
 }

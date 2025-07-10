@@ -1,77 +1,75 @@
 import managers.FileBackedTaskManager;
-import managers.Managers;
-import tasks.*;
+import managers.TaskManager;
+import tasks.Epic;
+import tasks.Subtask;
+import tasks.Task;
+import tasks.TaskStatus;
+
 import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class Main {
-    private static final Logger logger = Logger.getLogger(Main.class.getName());
-
     public static void main(String[] args) {
-        File file = null;
+        // Создаем файл для хранения данных
+        File file = new File("tasks.csv");
+
+        // Создаем менеджер задач
+        TaskManager manager = new FileBackedTaskManager(file);
+
+        // Создаем и добавляем задачи
+        Task task1 = new Task(0, "Помыть посуду", "Помыть всю посуду на кухне",
+                TaskStatus.NEW, Duration.ofMinutes(30),
+                LocalDateTime.of(2023, 1, 1, 10, 0));
+        manager.addNewTask(task1);
+
+        Task task2 = new Task(0, "Сделать уборку", "Убраться во всей квартире",
+                TaskStatus.NEW, Duration.ofHours(2),
+                LocalDateTime.of(2023, 1, 1, 12, 0));
+        manager.addNewTask(task2);
+
+        // Создаем эпик с подзадачами
+        Epic epic1 = new Epic(0, "Организовать вечеринку", "Подготовка к вечеринке");
+        manager.addNewEpic(epic1);
+        int epic1Id = epic1.getId();
+
+        Subtask subtask1 = new Subtask(0, "Купить продукты", "Купить еду и напитки",
+                TaskStatus.NEW, Duration.ofHours(1),
+                LocalDateTime.of(2023, 1, 2, 10, 0), epic1Id);
+        manager.addNewSubtask(subtask1);
+
+        Subtask subtask2 = new Subtask(0, "Приготовить еду", "Приготовить блюда для вечеринки",
+                TaskStatus.NEW, Duration.ofHours(3),
+                LocalDateTime.of(2023, 1, 2, 12, 0), epic1Id);
+        manager.addNewSubtask(subtask2);
+
+        // Выводим информацию о задачах
+        System.out.println("Все задачи:");
+        manager.getTasks().forEach(System.out::println);
+
+        System.out.println("\nВсе эпики:");
+        manager.getEpics().forEach(System.out::println);
+
+        System.out.println("\nВсе подзадачи:");
+        manager.getSubtasks().forEach(System.out::println);
+
+        // Получаем упорядоченный по приоритету список
+        System.out.println("\nЗадачи, упорядоченные по приоритету:");
+        manager.getPrioritizedTasks().forEach(System.out::println);
+
+        // Пытаемся добавить задачу с пересечением времени (должно вызвать исключение)
         try {
-            // 1. Создаем временный файл для хранения данных
-            file = File.createTempFile("tasks", ".csv");
-
-            // 2. Создаем менеджер с файловым хранилищем
-            FileBackedTaskManager manager = Managers.getFileBackedManager(file);
-
-            // 3. Создаем задачи разных типов
-            Task task1 = new Task(1, "Помыть посуду", "Помыть всю посуду вечером", TaskStatus.NEW);
-            Epic epic1 = new Epic(2, "Переезд", "Организация переезда в новый офис");
-            Subtask subtask1 = new Subtask(3, "Упаковать вещи", "Упаковать офисные принадлежности",
-                    TaskStatus.NEW, epic1.getId());
-
-            // 4. Добавляем задачи в менеджер
-            manager.addNewTask(task1);
-            manager.addNewEpic(epic1);
-            manager.addNewSubtask(subtask1);
-
-            // 5. Выводим созданные задачи
-            System.out.println("=== Все задачи ===");
-            System.out.println("Задачи:");
-            manager.getTasks().forEach(System.out::println);
-            System.out.println("\nЭпики:");
-            manager.getEpics().forEach(System.out::println);
-            System.out.println("\nПодзадачи:");
-            manager.getSubtasks().forEach(System.out::println);
-
-            // 6. Изменяем статусы некоторых задач
-            task1.setStatus(TaskStatus.IN_PROGRESS);
-            manager.updateTask(task1);
-
-            subtask1.setStatus(TaskStatus.DONE);
-            manager.updateSubtask(subtask1);
-
-            // 7. Проверяем обновление статуса эпика
-            System.out.println("\n=== После обновления статусов ===");
-            System.out.println("Статус эпика: " + manager.getEpic(epic1.getId()).getStatus());
-
-            // 8. Создаем новый менеджер из файла
-            FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-
-            // 9. Проверяем загруженные данные
-            System.out.println("\n=== Данные после загрузки из файла ===");
-            System.out.println("Задачи:");
-            loadedManager.getTasks().forEach(System.out::println);
-            System.out.println("\nЭпики:");
-            loadedManager.getEpics().forEach(System.out::println);
-            System.out.println("\nПодзадачи:");
-            loadedManager.getSubtasks().forEach(System.out::println);
-
-            // 10. Проверяем историю просмотров
-            System.out.println("\n=== История просмотров ===");
-            loadedManager.getHistory().forEach(System.out::println);
-
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Произошла ошибка при работе с файлом", e);
-            System.err.println("Произошла критическая ошибка. Подробности в логах.");
-        } finally {
-            if (file != null) {
-                file.deleteOnExit();
-            }
+            Task conflictTask = new Task(0, "Конфликтная задача", "Должна вызвать ошибку",
+                    TaskStatus.NEW, Duration.ofHours(1),
+                    LocalDateTime.of(2023, 1, 1, 11, 0));
+            manager.addNewTask(conflictTask);
+        } catch (Exception e) {
+            System.out.println("\nОшибка при добавлении задачи: " + e.getMessage());
         }
+
+        // Загружаем данные из файла (демонстрация работы FileBackedTaskManager)
+        TaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+        System.out.println("\nЗагруженные из файла задачи:");
+        loadedManager.getTasks().forEach(System.out::println);
     }
 }

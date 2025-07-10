@@ -5,10 +5,14 @@ import java.util.List;
 
 public interface TaskManager {
     // Методы для Task
-    int addNewTask(Task task);
+    void addNewTask(Task task);
+
     Task getTask(int id);
+
     List<Task> getTasks();
+
     void updateTask(Task task);
+
     void removeTask(int id);
     void removeAllTasks();
 
@@ -31,4 +35,9 @@ public interface TaskManager {
     // Дополнительные методы
     List<Task> getHistory();
     void updateEpicStatus(int epicId);
+
+    // Новые методы для временных параметров
+    List<Task> getPrioritizedTasks();
+    boolean hasTimeOverlap(Task task1, Task task2);
+    boolean isTimeSlotAvailable(Task task);
 }
