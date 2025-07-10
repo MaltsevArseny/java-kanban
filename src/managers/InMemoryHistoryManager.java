@@ -1,6 +1,7 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+package managers;
+
+import tasks.Task;
+import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private static class Node {
@@ -15,43 +16,39 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
     }
 
-    private final HashMap<Integer, Node> historyMap = new HashMap<>();
+    private final Map<Integer, Node> history = new HashMap<>();
     private Node head;
     private Node tail;
 
     @Override
     public void add(Task task) {
-        if (task == null) {
-            return;
-        }
-        int id = task.getId();
-        remove(id); // Удаляем задачу, если она уже есть в истории
+        if (task == null) return;
+        remove(task.getId());
         linkLast(task);
-        historyMap.put(id, tail);
+        history.put(task.getId(), tail);
     }
 
     @Override
     public void remove(int id) {
-        Node node = historyMap.get(id);
+        Node node = history.remove(id);
         if (node != null) {
             removeNode(node);
-            historyMap.remove(id);
         }
     }
 
     @Override
     public List<Task> getHistory() {
-        List<Task> history = new ArrayList<>();
+        List<Task> result = new ArrayList<>();
         Node current = head;
         while (current != null) {
-            history.add(current.task);
+            result.add(current.task);
             current = current.next;
         }
-        return history;
+        return result;
     }
 
     private void linkLast(Task task) {
-        final Node newNode = new Node(task, tail, null);
+        Node newNode = new Node(task, tail, null);
         if (tail == null) {
             head = newNode;
         } else {
