@@ -23,7 +23,7 @@ public class Task {
         this.startTime = startTime;
     }
 
-    // Геттеры и сеттеры
+    // Геттеры
     public int getId() {
         return id;
     }
@@ -40,31 +40,28 @@ public class Task {
         return status;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
-    }
-
-    public TaskType getType() {
-        return type;
-    }
-
     public Duration getDuration() {
         return duration;
-    }
-
-    public void setDuration(Duration duration) {
-        this.duration = duration;
     }
 
     public LocalDateTime getStartTime() {
         return startTime;
     }
 
+    public LocalDateTime getEndTime() {
+        return startTime != null ? startTime.plus(duration) : null;
+    }
+
+    // Сеттеры
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
-        return startTime != null ? startTime.plus(duration) : null;
+    public void setDuration(Duration duration) {
+        this.duration = duration;
     }
 }

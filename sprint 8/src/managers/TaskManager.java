@@ -7,11 +7,7 @@ public interface TaskManager {
     // Методы для Task
     void addNewTask(Task task);
 
-    Task getTask(int id);
-
     List<Task> getTasks();
-
-    void updateTask(Task task);
 
     void removeTask(int id);
     void removeAllTasks();
@@ -40,6 +36,4 @@ public interface TaskManager {
     List<Task> getPrioritizedTasks();
     boolean hasTimeOverlap(Task task1, Task task2);
     boolean isTimeSlotAvailable(Task task);
-
-    void updateEpicTime(int epicId);
 }
