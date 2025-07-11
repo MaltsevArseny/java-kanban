@@ -40,4 +40,6 @@ public interface TaskManager {
     List<Task> getPrioritizedTasks();
     boolean hasTimeOverlap(Task task1, Task task2);
     boolean isTimeSlotAvailable(Task task);
+
+    void updateEpicTime(int epicId);
 }

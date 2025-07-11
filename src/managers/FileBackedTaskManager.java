@@ -5,7 +5,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
@@ -125,33 +124,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void updateAllEpics() {
         for (Epic epic : epics.values()) {
-            List<Subtask> epicSubtasks = subtasks.values().stream()
-                    .filter(subtask -> subtask.getEpicId() == epic.getId())
-                    .toList();
-
-            if (epicSubtasks.isEmpty()) {
-                epic.setStartTime(null);
-                epic.setDuration(Duration.ZERO);
-                epic.setEndTime(null);
-            } else {
-                epic.setStartTime(epicSubtasks.stream()
-                        .map(Subtask::getStartTime)
-                        .filter(Objects::nonNull)
-                        .min(LocalDateTime::compareTo)
-                        .orElse(null));
-
-                epic.setEndTime(epicSubtasks.stream()
-                        .map(Subtask::getEndTime)
-                        .filter(Objects::nonNull)
-                        .max(LocalDateTime::compareTo)
-                        .orElse(null));
-
-                epic.setDuration(Duration.ofMinutes(
-                        epicSubtasks.stream()
-                                .mapToLong(s -> s.getDuration().toMinutes())
-                                .sum()
-                ));
-            }
+            updateEpicTime(epic.getId());
             updateEpicStatus(epic.getId());
         }
     }
