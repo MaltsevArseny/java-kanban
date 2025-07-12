@@ -1,11 +1,12 @@
 package managers;
 
 import tasks.*;
+
 import java.util.List;
 
 public interface TaskManager {
     // Методы для Task
-    int addNewTask(Task task);
+    void addNewTask(Task task);
     Task getTask(int id);
     List<Task> getTasks();
     void updateTask(Task task);
@@ -13,7 +14,7 @@ public interface TaskManager {
     void removeAllTasks();
 
     // Методы для Subtask
-    int addNewSubtask(Subtask subtask);
+    void addNewSubtask(Subtask subtask);
     Subtask getSubtask(int id);
     List<Subtask> getSubtasks();
     void updateSubtask(Subtask subtask);
@@ -31,4 +32,9 @@ public interface TaskManager {
     // Дополнительные методы
     List<Task> getHistory();
     void updateEpicStatus(int epicId);
+
+    // Методы для временных параметров
+    List<Task> getPrioritizedTasks();
+    boolean hasTimeOverlap(Task task1, Task task2);
+    boolean isTimeSlotAvailable(Task task);
 }
