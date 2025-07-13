@@ -41,4 +41,18 @@ public class HistoryHandler extends BaseHttpHandler {
         }
         return json.append("]").toString();
     }
+
+    // Добавляем метод для экранирования JSON-строк
+    private String escapeJson(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
 }

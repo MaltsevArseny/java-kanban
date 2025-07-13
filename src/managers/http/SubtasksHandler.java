@@ -111,6 +111,19 @@ public class SubtasksHandler extends BaseHttpHandler {
         );
     }
 
+    private String escapeJson(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
     private Subtask parseSubtaskFromJson(String json) {
         return new Subtask(
                 extractIntValue(json, "id"),

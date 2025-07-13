@@ -1,16 +1,21 @@
 package managers.http;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import managers.TaskManager;
 import tasks.Task;
 import tasks.TaskStatus;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TasksHandler extends BaseHttpHandler {
     private final TaskManager manager;
+    private final Gson gson = new Gson();
 
     public TasksHandler(TaskManager manager) {
         this.manager = manager;
@@ -19,7 +24,8 @@ public class TasksHandler extends BaseHttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-            switch (exchange.getRequestMethod()) {
+            String method = exchange.getRequestMethod();
+            switch (method) {
                 case "GET":
                     handleGet(exchange);
                     break;
@@ -38,22 +44,42 @@ public class TasksHandler extends BaseHttpHandler {
     }
 
     private void handleGet(HttpExchange exchange) throws IOException {
-        List<Task> tasks = manager.getTasks();
-        String json = tasksToJson(tasks);
-        sendSuccess(exchange, json);
+        String query = exchange.getRequestURI().getQuery();
+        if (query != null && query.startsWith("id=")) {
+            // Запрос одной задачи по ID
+            int id = Integer.parseInt(query.substring(3));
+            Task task = manager.getTask(id);
+            if (task != null) {
+                sendSuccess(exchange, gson.toJson(task));
+            } else {
+                sendNotFound(exchange);
+            }
+        } else {
+            // Запрос всех задач
+            List<Task> tasks = manager.getTasks();
+            sendSuccess(exchange, gson.toJson(tasks));
+        }
     }
 
     private void handlePost(HttpExchange exchange) throws IOException {
-        String body = readRequest(exchange);
-        Task task = parseTask(body);
+        String body = readRequestBody(exchange);
+        Task task = gson.fromJson(body, Task.class);
 
         try {
+            // Проверка на пересечение времени
+            if (!manager.isTimeSlotAvailable(task)) {
+                sendHasOverlaps(exchange);
+                return;
+            }
+
             if (task.getId() == 0) {
+                // Создание новой задачи
                 manager.addNewTask(task);
-                sendCreated(exchange, taskToJson(task));
+                sendCreated(exchange, gson.toJson(task));
             } else {
+                // Обновление существующей задачи
                 manager.updateTask(task);
-                sendSuccess(exchange, taskToJson(task));
+                sendSuccess(exchange, gson.toJson(task));
             }
         } catch (Exception e) {
             sendBadRequest(exchange, e.getMessage());
@@ -67,61 +93,20 @@ public class TasksHandler extends BaseHttpHandler {
             manager.removeTask(id);
             sendSuccess(exchange, "{\"result\":\"Task deleted\"}");
         } else {
-            manager.removeAllTasks();
-            sendSuccess(exchange, "{\"result\":\"All tasks deleted\"}");
+            sendBadRequest(exchange, "Missing 'id' parameter");
         }
     }
 
-    private String tasksToJson(List<Task> tasks) {
-        StringBuilder sb = new StringBuilder("[");
-        for (Task task : tasks) {
-            if (sb.length() > 1) sb.append(",");
-            sb.append(taskToJson(task));
+    private String readRequestBody(HttpExchange exchange) throws IOException {
+        try (InputStream is = exchange.getRequestBody()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
-        sb.append("]");
-        return sb.toString();
     }
 
-    private String taskToJson(Task task) {
-        return String.format(
-                "{\"id\":%d,\"name\":\"%s\",\"status\":\"%s\",\"description\":\"%s\"}",
-                task.getId(),
-                escapeJson(task.getName()),
-                task.getStatus(),
-                escapeJson(task.getDescription())
-        );
-    }
-
-    private Task parseTask(String json) {
-        // Простейший парсинг JSON без Gson
-        String idStr = extractValue(json, "id");
-        String name = extractValue(json, "name");
-        String status = extractValue(json, "status");
-        String description = extractValue(json, "description");
-
-        return new Task(
-                idStr.isEmpty() ? 0 : Integer.parseInt(idStr),
-                name,
-                description,
-                TaskStatus.valueOf(status),
-                Duration.ZERO,
-                null
-        );
-    }
-
-    private String extractValue(String json, String key) {
-        String search = "\"" + key + "\":";
-        int start = json.indexOf(search) + search.length();
-        if (start < search.length()) return "";
-
-        int end = json.indexOf(',', start);
-        if (end == -1) end = json.indexOf('}', start);
-        if (end == -1) return "";
-
-        String value = json.substring(start, end).trim();
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            return value.substring(1, value.length() - 1);
-        }
-        return value;
+    private void sendHasOverlaps(HttpExchange exchange) throws IOException {
+        String response = "{\"error\":\"Time slot overlaps with existing task\"}";
+        exchange.sendResponseHeaders(409, response.getBytes().length);
+        exchange.getResponseBody().write(response.getBytes());
+        exchange.close();
     }
 }

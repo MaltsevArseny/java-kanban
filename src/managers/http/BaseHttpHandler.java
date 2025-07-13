@@ -1,60 +1,44 @@
 package managers.http;
 
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
-public abstract class BaseHttpHandler {
+public abstract class BaseHttpHandler implements HttpHandler {
+    @Override
+    public abstract void handle(HttpExchange exchange) throws IOException;
 
-    protected void sendResponse(HttpExchange exchange, String response, int statusCode) throws IOException {
-        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(statusCode, bytes.length);
-        exchange.getResponseBody().write(bytes);
+    // Общие методы для отправки ответов (sendSuccess, sendNotFound и т.д.)
+    protected void sendSuccess(HttpExchange exchange, String response) throws IOException {
+        exchange.sendResponseHeaders(200, response.getBytes().length);
+        exchange.getResponseBody().write(response.getBytes());
         exchange.close();
     }
 
-    protected void sendJson(HttpExchange exchange, String json, int statusCode) throws IOException {
-        sendResponse(exchange, json, statusCode);
-    }
-
-    protected void sendSuccess(HttpExchange exchange, String json) throws IOException {
-        sendJson(exchange, json, 200);
-    }
-
-    protected void sendCreated(HttpExchange exchange, String json) throws IOException {
-        sendJson(exchange, json, 201);
-    }
-
     protected void sendNotFound(HttpExchange exchange) throws IOException {
-        sendJson(exchange, "{\"error\":\"Not found\"}", 404);
-    }
-
-    protected void sendBadRequest(HttpExchange exchange, String message) throws IOException {
-        sendJson(exchange, "{\"error\":\"" + escapeJson(message) + "\"}", 400);
-    }
-
-    protected void sendConflict(HttpExchange exchange) throws IOException {
-        sendJson(exchange, "{\"error\":\"Time conflict\"}", 409);
+        String response = "{\"error\":\"Not found\"}";
+        exchange.sendResponseHeaders(404, response.getBytes().length);
+        exchange.getResponseBody().write(response.getBytes());
+        exchange.close();
     }
 
     protected void sendInternalError(HttpExchange exchange) throws IOException {
-        sendJson(exchange, "{\"error\":\"Internal server error\"}", 500);
+        String response = "{\"error\":\"Internal server error\"}";
+        exchange.sendResponseHeaders(500, response.getBytes().length);
+        exchange.getResponseBody().write(response.getBytes());
+        exchange.close();
     }
 
-    protected String readRequest(HttpExchange exchange) throws IOException {
-        InputStream is = exchange.getRequestBody();
-        return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+    protected void sendBadRequest(HttpExchange exchange, String message) throws IOException {
+        String response = "{\"error\":\"" + message + "\"}";
+        exchange.sendResponseHeaders(400, response.getBytes().length);
+        exchange.getResponseBody().write(response.getBytes());
+        exchange.close();
     }
 
-    String escapeJson(String value) {
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+    protected void sendCreated(HttpExchange exchange, String response) throws IOException {
+        exchange.sendResponseHeaders(201, response.getBytes().length);
+        exchange.getResponseBody().write(response.getBytes());
+        exchange.close();
     }
-
-    public abstract void handle(HttpExchange exchange) throws IOException;
 }

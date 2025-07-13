@@ -93,6 +93,20 @@ public class EpicsHandler extends BaseHttpHandler {
         );
     }
 
+    // Добавленный метод для экранирования JSON
+    private String escapeJson(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
     private Epic parseEpic(String json) {
         return new Epic(
                 extractIntValue(json),
