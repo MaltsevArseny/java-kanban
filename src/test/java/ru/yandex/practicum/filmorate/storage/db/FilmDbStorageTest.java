@@ -4,20 +4,25 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ComponentScan;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.time.LocalDate;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FilmDbStorage.class})
-@SuppressWarnings("unused") // Подавляет предупреждения о неиспользуемых полях
+@ComponentScan(basePackages = "ru.yandex.practicum.filmorate.storage.db")
 class FilmDbStorageTest {
+
     @Autowired
-    private FilmDbStorage filmStorage;
+    private FilmStorage filmStorage;
+
+    FilmDbStorageTest(FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
+    }
 
     @Test
     void shouldCreateAndFindFilmById() {
@@ -40,4 +45,5 @@ class FilmDbStorageTest {
         assertThat(foundFilm).isPresent();
         assertThat(foundFilm.get().getName()).isEqualTo(film.getName());
     }
+
 }

@@ -2,38 +2,26 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Genre;
-import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.List;
 
 @RestController
 @RequestMapping("/genres")
-@SuppressWarnings("unused") // Подавляет предупреждения о неиспользуемых элементах
+@SuppressWarnings("unused")
 public class GenreController {
-    private final JdbcTemplate jdbcTemplate;
+    private final FilmService filmService;
 
-    public GenreController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public GenreController(FilmService filmService) {
+        this.filmService = filmService;
     }
 
     @GetMapping
     public List<Genre> findAll() {
-        String sql = "SELECT * FROM genres ORDER BY id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Genre genre = new Genre();
-            genre.setId(rs.getInt("id"));
-            genre.setName(rs.getString("name"));
-            return genre;
-        });
+        return filmService.findAllGenres();
     }
 
     @GetMapping("/{id}")
     public Genre findById(@PathVariable int id) {
-        String sql = "SELECT * FROM genres WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            Genre genre = new Genre();
-            genre.setId(rs.getInt("id"));
-            genre.setName(rs.getString("name"));
-            return genre;
-        }, id);
+        return filmService.findGenreById(id);
     }
 }

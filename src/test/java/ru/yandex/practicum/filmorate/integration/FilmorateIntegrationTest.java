@@ -10,12 +10,13 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import java.time.LocalDate;
+import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:schema.sql")
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:data.sql")
-@SuppressWarnings("unused") // Подавляет предупреждения о неиспользуемых полях
+@SuppressWarnings("unused")
 class FilmorateIntegrationTest {
     @Autowired
     private UserService userService;
@@ -52,7 +53,8 @@ class FilmorateIntegrationTest {
 
         filmService.addLike(createdFilm.getId(), createdUser.getId());
 
-        Film filmWithLike = filmService.findById(createdFilm.getId()).orElseThrow();
-        assertThat(filmWithLike.getLikes()).contains(createdUser.getId());
+        Optional<Film> filmOptional = Optional.ofNullable(filmService.findById(createdFilm.getId()));
+        assertThat(filmOptional).isPresent();
+        assertThat(filmOptional.get().getLikes()).contains(createdUser.getId());
     }
 }

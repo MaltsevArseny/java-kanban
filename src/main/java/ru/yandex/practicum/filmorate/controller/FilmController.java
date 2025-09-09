@@ -33,7 +33,7 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public Optional<Film> findById(@PathVariable Long id) {
-        return filmService.findById(id);
+        return Optional.ofNullable(filmService.findById(id));
     }
 
     @PutMapping("/{id}/like/{userId}")
